@@ -1,9 +1,16 @@
 import Task from "../models/task.model.js";
+import User from "../models/user.model.js";
 import { Op } from "sequelize";
 
 const obtenerTareas = async (req, res) => {
     try {
-        const tareas = await Task.findAll();
+        const tareas = await Task.findAll({
+            include: {
+                model: User,
+                as: "author",
+                attributes: ["id", "name", "email"]
+            }
+        });
 
         res.status(200).json({
             mensaje: "Tareas obtenidas correctamente",
@@ -22,7 +29,13 @@ const obtenerTareaPorId = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const tarea = await Task.findByPk(id);
+        const tarea = await Task.findByPk(id, {
+            include: {
+                model: User,
+                as: "author",
+                attributes: ["id", "name", "email"]
+            }
+        });
 
         if (!tarea) {
             return res.status(404).json({
@@ -52,9 +65,18 @@ const crearTarea = async (req, res) => {
                 mensaje: "El título y la descripción son obligatorios"
             });
         }
+
         if (!userId) {
             return res.status(400).json({
                 mensaje: "El userId es obligatorio"
+            });
+        }
+
+        const usuario = await User.findByPk(userId);
+
+        if (!usuario) {
+            return res.status(404).json({
+                mensaje: "El usuario indicado no existe"
             });
         }
 
@@ -70,13 +92,16 @@ const crearTarea = async (req, res) => {
             });
         }
 
-        if (isComplete !== undefined && typeof isComplete !== 'boolean') {
+        if (isComplete !== undefined && typeof isComplete !== "boolean") {
             return res.status(400).json({
                 mensaje: "El campo isComplete debe ser un valor booleano"
             });
         }
 
-        const tareaExistente = await Task.findOne({ where: { title } });
+        const tareaExistente = await Task.findOne({
+            where: { title }
+        });
+
         if (tareaExistente) {
             return res.status(400).json({
                 mensaje: "Ya existe una tarea con ese título"
@@ -86,8 +111,8 @@ const crearTarea = async (req, res) => {
         const nuevaTarea = await Task.create({
             title,
             description,
-            isComplete: isComplete || false,
-            userId,
+            isComplete: isComplete ?? false,
+            userId
         });
 
         res.status(201).json({
@@ -109,6 +134,7 @@ const actualizarTarea = async (req, res) => {
         const { title, description, isComplete } = req.body;
 
         const tarea = await Task.findByPk(id);
+
         if (!tarea) {
             return res.status(404).json({
                 mensaje: "Tarea no encontrada"
@@ -144,13 +170,14 @@ const actualizarTarea = async (req, res) => {
             });
         }
 
-        if (isComplete !== undefined && typeof isComplete !== 'boolean') {
+        if (isComplete !== undefined && typeof isComplete !== "boolean") {
             return res.status(400).json({
                 mensaje: "El campo isComplete debe ser un valor booleano"
             });
         }
 
         const datosActualizar = {};
+
         if (title !== undefined) datosActualizar.title = title;
         if (description !== undefined) datosActualizar.description = description;
         if (isComplete !== undefined) datosActualizar.isComplete = isComplete;
@@ -175,6 +202,7 @@ const eliminarTarea = async (req, res) => {
         const { id } = req.params;
 
         const tarea = await Task.findByPk(id);
+
         if (!tarea) {
             return res.status(404).json({
                 mensaje: "Tarea no encontrada"

@@ -1,24 +1,30 @@
 import User from "../models/user.model.js";
+import Task from "../models/task.model.js";
 import { Op } from "sequelize";
 
-const obtenerUsuarios = async(req,res) => {
+const obtenerUsuarios = async (req, res) => {
     try {
-        const usuarios = await User.findAll();
+        const usuarios = await User.findAll({
+            attributes: ["id", "name", "email"],
+            include: {
+                model: Task,
+                as: "tareas",
+                attributes: ["id", "title", "description", "isComplete"]
+            }
+        });
 
         res.status(200).json({
             mensaje: "Usuarios obtenidos correctamente",
             datos: usuarios
         });
-
     } catch (error) {
+        console.error("Error al obtener usuarios:", error);
 
-    console.error("Error al obtener usuarios:", error);
-
-    res.status(500).json({
-        mensaje: "Error al obtener usuarios",
-        error: error.message
-    });
-}
+        res.status(500).json({
+            mensaje: "Error al obtener usuarios",
+            error: error.message
+        });
+    }
 };
 
 const crearUsuario = async (req, res) => {
@@ -37,14 +43,21 @@ const crearUsuario = async (req, res) => {
             });
         }
 
-        const usuarioExistente = await User.findOne({ where: { email } });
+        const usuarioExistente = await User.findOne({
+            where: { email }
+        });
+
         if (usuarioExistente) {
             return res.status(400).json({
                 mensaje: "El email ya está registrado"
             });
         }
 
-        const nuevoUsuario = await User.create({ name, email, password });
+        const nuevoUsuario = await User.create({
+            name,
+            email,
+            password
+        });
 
         res.status(201).json({
             mensaje: "Usuario creado correctamente",
@@ -52,6 +65,7 @@ const crearUsuario = async (req, res) => {
         });
     } catch (error) {
         console.error("Error al crear usuario:", error);
+
         res.status(500).json({
             mensaje: "Error al crear usuario",
             error: error.message
@@ -65,6 +79,7 @@ const actualizarUsuario = async (req, res) => {
         const { name, email, password } = req.body;
 
         const usuario = await User.findByPk(id);
+
         if (!usuario) {
             return res.status(404).json({
                 mensaje: "Usuario no encontrado"
@@ -84,7 +99,7 @@ const actualizarUsuario = async (req, res) => {
         }
 
         const usuarioExistente = await User.findOne({
-            where: { 
+            where: {
                 email,
                 id: { [Op.ne]: id }
             }
@@ -96,7 +111,11 @@ const actualizarUsuario = async (req, res) => {
             });
         }
 
-        await usuario.update({ name, email, password });
+        await usuario.update({
+            name,
+            email,
+            password
+        });
 
         res.status(200).json({
             mensaje: "Usuario actualizado correctamente",
@@ -104,6 +123,7 @@ const actualizarUsuario = async (req, res) => {
         });
     } catch (error) {
         console.error("Error al actualizar usuario:", error);
+
         res.status(500).json({
             mensaje: "Error al actualizar usuario",
             error: error.message
@@ -116,6 +136,7 @@ const eliminarUsuario = async (req, res) => {
         const { id } = req.params;
 
         const usuario = await User.findByPk(id);
+
         if (!usuario) {
             return res.status(404).json({
                 mensaje: "Usuario no encontrado"
@@ -129,6 +150,7 @@ const eliminarUsuario = async (req, res) => {
         });
     } catch (error) {
         console.error("Error al eliminar usuario:", error);
+
         res.status(500).json({
             mensaje: "Error al eliminar usuario",
             error: error.message
@@ -140,7 +162,14 @@ const obtenerUsuarioPorId = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const usuario = await User.findByPk(id);
+        const usuario = await User.findByPk(id, {
+            attributes: ["id", "name", "email"],
+            include: {
+                model: Task,
+                as: "tareas",
+                attributes: ["id", "title", "description", "isComplete"]
+            }
+        });
 
         if (!usuario) {
             return res.status(404).json({
@@ -152,8 +181,9 @@ const obtenerUsuarioPorId = async (req, res) => {
             mensaje: "Usuario obtenido correctamente",
             datos: usuario
         });
-
     } catch (error) {
+        console.error("Error al obtener usuario:", error);
+
         res.status(500).json({
             mensaje: "Error al obtener usuario",
             error: error.message
@@ -161,4 +191,10 @@ const obtenerUsuarioPorId = async (req, res) => {
     }
 };
 
-export {obtenerUsuarios, obtenerUsuarioPorId, crearUsuario, actualizarUsuario, eliminarUsuario};
+export {
+    obtenerUsuarios,
+    obtenerUsuarioPorId,
+    crearUsuario,
+    actualizarUsuario,
+    eliminarUsuario
+};

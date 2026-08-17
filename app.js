@@ -4,6 +4,8 @@ import User from "./src/models/user.model.js";
 import Task from "./src/models/task.model.js";
 import Materia from "./src/models/materia.model.js";
 import MateriaTarea from "./src/models/materiaTarea.model.js";
+import Preferencias from "./src/models/preferencias.model.js";
+import preferenciasRoutes from "./src/routes/preferencias.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import taskRoutes from "./src/routes/task.routes.js";
 import materiaRoutes from "./src/routes/materia.routes.js";
@@ -26,6 +28,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/materias", materiaRoutes);
 app.use("/api/materia-tareas", materiaTareaRoutes);
+app.use("/api/preferencias", preferenciasRoutes);
 
 const startServer = async () => {
     try {
