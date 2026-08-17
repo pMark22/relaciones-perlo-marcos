@@ -1,4 +1,5 @@
 import Materia from "../models/materia.model.js";
+import Task from "../models/task.model.js";
 
 const crearMateria = async (req, res) => {
     try {
@@ -45,7 +46,13 @@ const crearMateria = async (req, res) => {
 
 const obtenerMaterias = async (req, res) => {
     try {
-        const materias = await Materia.findAll();
+        const materias = await Materia.findAll({
+    include: {
+        model: Task,
+        as: "tareas",
+        attributes: ["id", "title", "description", "isComplete"]
+    }
+});
 
         res.status(200).json({
             mensaje: "Materias obtenidas correctamente",
