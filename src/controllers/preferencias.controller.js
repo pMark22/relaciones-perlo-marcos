@@ -1,17 +1,12 @@
+import { matchedData } from "express-validator";
 import Preferencias from "../models/preferencias.model.js";
 import User from "../models/user.model.js";
 
 const crearPreferencias = async (req, res) => {
     try {
-        const { tema, idioma, userId } = req.body;
+        const datos = matchedData(req);
 
-        if (!tema || !idioma || !userId) {
-            return res.status(400).json({
-                mensaje: "Tema, idioma y userId son obligatorios"
-            });
-        }
-
-        const usuario = await User.findByPk(userId);
+        const usuario = await User.findByPk(datos.userId);
 
         if (!usuario) {
             return res.status(404).json({
@@ -20,7 +15,7 @@ const crearPreferencias = async (req, res) => {
         }
 
         const preferenciasExistentes = await Preferencias.findOne({
-            where: { userId }
+            where: { userId: datos.userId }
         });
 
         if (preferenciasExistentes) {
@@ -29,11 +24,7 @@ const crearPreferencias = async (req, res) => {
             });
         }
 
-        const preferencias = await Preferencias.create({
-            tema,
-            idioma,
-            userId
-        });
+        const preferencias = await Preferencias.create(datos);
 
         res.status(201).json({
             mensaje: "Preferencias creadas correctamente",
@@ -76,7 +67,4 @@ const obtenerPreferencias = async (req, res) => {
     }
 };
 
-export {
-    crearPreferencias,
-    obtenerPreferencias
-};
+export {crearPreferencias,obtenerPreferencias};
