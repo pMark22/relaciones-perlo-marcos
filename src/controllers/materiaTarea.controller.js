@@ -1,25 +1,22 @@
+import { matchedData } from "express-validator";
 import Materia from "../models/materia.model.js";
 import Task from "../models/task.model.js";
 import MateriaTarea from "../models/materiaTarea.model.js";
 
 const asignarTarea = async (req, res) => {
     try {
-        const { materiaId, tareaId } = req.body;
+        const datos = matchedData(req);
 
-        if (!materiaId || !tareaId) {
-            return res.status(400).json({
-                mensaje: "materiaId y tareaId son obligatorios"
-            });
-        }
+        const materia = await Materia.findByPk(datos.materiaId);
 
-        const materia = await Materia.findByPk(materiaId);
         if (!materia) {
             return res.status(404).json({
                 mensaje: "Materia no encontrada"
             });
         }
 
-        const tarea = await Task.findByPk(tareaId);
+        const tarea = await Task.findByPk(datos.tareaId);
+
         if (!tarea) {
             return res.status(404).json({
                 mensaje: "Tarea no encontrada"
@@ -28,8 +25,8 @@ const asignarTarea = async (req, res) => {
 
         const relacionExistente = await MateriaTarea.findOne({
             where: {
-                materiaId,
-                tareaId
+                materiaId: datos.materiaId,
+                tareaId: datos.tareaId
             }
         });
 
@@ -39,10 +36,7 @@ const asignarTarea = async (req, res) => {
             });
         }
 
-        const relacion = await MateriaTarea.create({
-            materiaId,
-            tareaId
-        });
+        const relacion = await MateriaTarea.create(datos);
 
         res.status(201).json({
             mensaje: "Tarea asignada a la materia correctamente",

@@ -1,3 +1,4 @@
+import { matchedData } from "express-validator";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
@@ -58,21 +59,9 @@ const obtenerTareaPorId = async (req, res) => {
 
 const crearTarea = async (req, res) => {
     try {
-        const { title, description, isComplete, userId } = req.body;
+        const datos = matchedData(req);
 
-        if (!title || !description) {
-            return res.status(400).json({
-                mensaje: "El título y la descripción son obligatorios"
-            });
-        }
-
-        if (!userId) {
-            return res.status(400).json({
-                mensaje: "El userId es obligatorio"
-            });
-        }
-
-        const usuario = await User.findByPk(userId);
+        const usuario = await User.findByPk(datos.userId);
 
         if (!usuario) {
             return res.status(404).json({
@@ -80,26 +69,8 @@ const crearTarea = async (req, res) => {
             });
         }
 
-        if (title.length > 100) {
-            return res.status(400).json({
-                mensaje: "El título no puede tener más de 100 caracteres"
-            });
-        }
-
-        if (description.length > 100) {
-            return res.status(400).json({
-                mensaje: "La descripción no puede tener más de 100 caracteres"
-            });
-        }
-
-        if (isComplete !== undefined && typeof isComplete !== "boolean") {
-            return res.status(400).json({
-                mensaje: "El campo isComplete debe ser un valor booleano"
-            });
-        }
-
         const tareaExistente = await Task.findOne({
-            where: { title }
+            where: { title: datos.title }
         });
 
         if (tareaExistente) {
@@ -108,19 +79,20 @@ const crearTarea = async (req, res) => {
             });
         }
 
-        const nuevaTarea = await Task.create({
-            title,
-            description,
-            isComplete: isComplete ?? false,
-            userId
-        });
+        if (datos.isComplete === undefined) {
+            datos.isComplete = false;
+        }
+
+        const nuevaTarea = await Task.create(datos);
 
         res.status(201).json({
             mensaje: "Tarea creada correctamente",
             datos: nuevaTarea
         });
+
     } catch (error) {
         console.error("Error al crear tarea:", error);
+
         res.status(500).json({
             mensaje: "Error al crear tarea",
             error: error.message
@@ -131,7 +103,8 @@ const crearTarea = async (req, res) => {
 const actualizarTarea = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, isComplete } = req.body;
+
+        const datos = matchedData(req);
 
         const tarea = await Task.findByPk(id);
 
@@ -141,55 +114,31 @@ const actualizarTarea = async (req, res) => {
             });
         }
 
-        if (title !== undefined) {
-            if (title.length > 100) {
-                return res.status(400).json({
-                    mensaje: "El título no puede tener más de 100 caracteres"
-                });
-            }
-
-            if (title !== tarea.title) {
-                const tareaExistente = await Task.findOne({
-                    where: {
-                        title,
-                        id: { [Op.ne]: id }
-                    }
-                });
-
-                if (tareaExistente) {
-                    return res.status(400).json({
-                        mensaje: "Ya existe una tarea con ese título"
-                    });
+        if (datos.title && datos.title !== tarea.title) {
+            const tareaExistente = await Task.findOne({
+                where: {
+                    title: datos.title,
+                    id: { [Op.ne]: id }
                 }
+            });
+
+            if (tareaExistente) {
+                return res.status(400).json({
+                    mensaje: "Ya existe una tarea con ese título"
+                });
             }
         }
 
-        if (description !== undefined && description.length > 100) {
-            return res.status(400).json({
-                mensaje: "La descripción no puede tener más de 100 caracteres"
-            });
-        }
-
-        if (isComplete !== undefined && typeof isComplete !== "boolean") {
-            return res.status(400).json({
-                mensaje: "El campo isComplete debe ser un valor booleano"
-            });
-        }
-
-        const datosActualizar = {};
-
-        if (title !== undefined) datosActualizar.title = title;
-        if (description !== undefined) datosActualizar.description = description;
-        if (isComplete !== undefined) datosActualizar.isComplete = isComplete;
-
-        await tarea.update(datosActualizar);
+        await tarea.update(datos);
 
         res.status(200).json({
             mensaje: "Tarea actualizada correctamente",
             datos: tarea
         });
+
     } catch (error) {
         console.error("Error al actualizar tarea:", error);
+
         res.status(500).json({
             mensaje: "Error al actualizar tarea",
             error: error.message
