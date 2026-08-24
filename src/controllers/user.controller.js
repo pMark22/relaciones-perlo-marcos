@@ -2,6 +2,8 @@ import User from "../models/user.model.js";
 import Task from "../models/task.model.js";
 import { Op } from "sequelize";
 
+import { matchedData } from "express-validator";
+
 const obtenerUsuarios = async (req, res) => {
     try {
         const usuarios = await User.findAll({
@@ -29,40 +31,15 @@ const obtenerUsuarios = async (req, res) => {
 
 const crearUsuario = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const datos = matchedData(req);
 
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                mensaje: "Todos los campos son obligatorios"
-            });
-        }
-
-        if (name.length > 100 || email.length > 100 || password.length > 100) {
-            return res.status(400).json({
-                mensaje: "Los campos no pueden tener más de 100 caracteres"
-            });
-        }
-
-        const usuarioExistente = await User.findOne({
-            where: { email }
-        });
-
-        if (usuarioExistente) {
-            return res.status(400).json({
-                mensaje: "El email ya está registrado"
-            });
-        }
-
-        const nuevoUsuario = await User.create({
-            name,
-            email,
-            password
-        });
+        const nuevoUsuario = await User.create(datos);
 
         res.status(201).json({
             mensaje: "Usuario creado correctamente",
             datos: nuevoUsuario
         });
+
     } catch (error) {
         console.error("Error al crear usuario:", error);
 
@@ -76,7 +53,8 @@ const crearUsuario = async (req, res) => {
 const actualizarUsuario = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, password } = req.body;
+
+        const datos = matchedData(req);
 
         const usuario = await User.findByPk(id);
 
@@ -86,21 +64,9 @@ const actualizarUsuario = async (req, res) => {
             });
         }
 
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                mensaje: "Todos los campos son obligatorios"
-            });
-        }
-
-        if (name.length > 100 || email.length > 100 || password.length > 100) {
-            return res.status(400).json({
-                mensaje: "Los campos no pueden tener más de 100 caracteres"
-            });
-        }
-
         const usuarioExistente = await User.findOne({
             where: {
-                email,
+                email: datos.email,
                 id: { [Op.ne]: id }
             }
         });
@@ -111,16 +77,13 @@ const actualizarUsuario = async (req, res) => {
             });
         }
 
-        await usuario.update({
-            name,
-            email,
-            password
-        });
+        await usuario.update(datos);
 
         res.status(200).json({
             mensaje: "Usuario actualizado correctamente",
             datos: usuario
         });
+
     } catch (error) {
         console.error("Error al actualizar usuario:", error);
 
@@ -191,10 +154,4 @@ const obtenerUsuarioPorId = async (req, res) => {
     }
 };
 
-export {
-    obtenerUsuarios,
-    obtenerUsuarioPorId,
-    crearUsuario,
-    actualizarUsuario,
-    eliminarUsuario
-};
+export {obtenerUsuarios,obtenerUsuarioPorId,crearUsuario,actualizarUsuario,eliminarUsuario};
