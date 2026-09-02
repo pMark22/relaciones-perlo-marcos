@@ -20,4 +20,34 @@ const validarCrearPreferencias = [
         .withMessage("El userId debe ser un número entero")
 ];
 
-export {validarCrearPreferencias};
+const validarActualizarPreferencias = [
+    param("id")
+        .isInt({ min: 1 })
+        .withMessage("El ID debe ser un entero positivo"),
+
+    body("tema")
+        .optional()
+        .notEmpty()
+        .withMessage("El tema no puede estar vacío")
+        .isLength({ max: 20 })
+        .withMessage("El tema no puede tener más de 20 caracteres"),
+
+    body("idioma")
+        .optional()
+        .notEmpty()
+        .withMessage("El idioma no puede estar vacío")
+        .isLength({ max: 20 })
+        .withMessage("El idioma no puede tener más de 20 caracteres")
+];
+
+const validarIdPreferencias = [
+    param("id")
+        .isInt({ min: 1 })
+        .withMessage("El ID debe ser un entero positivo")
+];
+
+export {
+    validarCrearPreferencias,
+    validarActualizarPreferencias,
+    validarIdPreferencias
+};
