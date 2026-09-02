@@ -26,7 +26,8 @@ const Task = sequelize.define("Task", {
     allowNull: false,
 },
 },{
-    timestamps:false,
+    timestamps: true,
+    paranoid: true,
 });
 
 export default Task;
