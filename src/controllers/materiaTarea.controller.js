@@ -53,4 +53,103 @@ const asignarTarea = async (req, res) => {
     }
 };
 
-export { asignarTarea };
+const actualizarMateriaTarea = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const datos = matchedData(req);
+
+        const relacion = await MateriaTarea.findByPk(id);
+
+        if (!relacion) {
+            return res.status(404).json({
+                mensaje: "Relación no encontrada"
+            });
+        }
+
+        if (datos.materiaId) {
+            const materia = await Materia.findByPk(datos.materiaId);
+
+            if (!materia) {
+                return res.status(404).json({
+                    mensaje: "Materia no encontrada"
+                });
+            }
+        }
+
+        if (datos.tareaId) {
+            const tarea = await Task.findByPk(datos.tareaId);
+
+            if (!tarea) {
+                return res.status(404).json({
+                    mensaje: "Tarea no encontrada"
+                });
+            }
+        }
+
+        const materiaId = datos.materiaId ?? relacion.materiaId;
+        const tareaId = datos.tareaId ?? relacion.tareaId;
+
+        const relacionExistente = await MateriaTarea.findOne({
+            where: {
+                materiaId,
+                tareaId
+            }
+        });
+
+        if (relacionExistente && relacionExistente.id !== relacion.id) {
+            return res.status(400).json({
+                mensaje: "La relación ya existe"
+            });
+        }
+
+        await relacion.update(datos);
+
+        res.status(200).json({
+            mensaje: "Relación actualizada correctamente",
+            datos: relacion
+        });
+
+    } catch (error) {
+        console.error("Error al actualizar relación:", error);
+
+        res.status(500).json({
+            mensaje: "Error al actualizar relación",
+            error: error.message
+        });
+    }
+};
+
+const eliminarMateriaTarea = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const relacion = await MateriaTarea.findByPk(id);
+
+        if (!relacion) {
+            return res.status(404).json({
+                mensaje: "Relación no encontrada"
+            });
+        }
+
+        await relacion.destroy();
+
+        res.status(200).json({
+            mensaje: "Relación eliminada correctamente"
+        });
+
+    } catch (error) {
+        console.error("Error al eliminar relación:", error);
+
+        res.status(500).json({
+            mensaje: "Error al eliminar relación",
+            error: error.message
+        });
+    }
+};
+
+export {
+    asignarTarea,
+    actualizarMateriaTarea,
+    eliminarMateriaTarea
+};

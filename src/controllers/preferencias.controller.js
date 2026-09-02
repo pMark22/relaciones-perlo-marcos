@@ -67,4 +67,68 @@ const obtenerPreferencias = async (req, res) => {
     }
 };
 
-export {crearPreferencias,obtenerPreferencias};
+const actualizarPreferencias = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const datos = matchedData(req);
+
+        const preferencias = await Preferencias.findByPk(id);
+
+        if (!preferencias) {
+            return res.status(404).json({
+                mensaje: "Preferencias no encontradas"
+            });
+        }
+
+        await preferencias.update(datos);
+
+        res.status(200).json({
+            mensaje: "Preferencias actualizadas correctamente",
+            datos: preferencias
+        });
+
+    } catch (error) {
+        console.error("Error al actualizar preferencias:", error);
+
+        res.status(500).json({
+            mensaje: "Error al actualizar preferencias",
+            error: error.message
+        });
+    }
+};
+
+const eliminarPreferencias = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const preferencias = await Preferencias.findByPk(id);
+
+        if (!preferencias) {
+            return res.status(404).json({
+                mensaje: "Preferencias no encontradas"
+            });
+        }
+
+        await preferencias.destroy();
+
+        res.status(200).json({
+            mensaje: "Preferencias eliminadas correctamente"
+        });
+
+    } catch (error) {
+        console.error("Error al eliminar preferencias:", error);
+
+        res.status(500).json({
+            mensaje: "Error al eliminar preferencias",
+            error: error.message
+        });
+    }
+};
+
+export {
+    crearPreferencias,
+    obtenerPreferencias,
+    actualizarPreferencias,
+    eliminarPreferencias
+};

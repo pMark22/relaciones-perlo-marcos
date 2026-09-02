@@ -60,8 +60,9 @@ const validarActualizarUsuario = [
     ...validarIdUsuario,
 
     body("name")
+        .optional()
         .notEmpty()
-        .withMessage("El nombre es obligatorio")
+        .withMessage("El nombre no puede estar vacío")
         .isLength({ max: 100 })
         .withMessage("El nombre no puede tener más de 100 caracteres")
         .custom((name) => {
@@ -73,8 +74,7 @@ const validarActualizarUsuario = [
         }),
 
     body("email")
-        .notEmpty()
-        .withMessage("El email es obligatorio")
+        .optional()
         .isEmail()
         .withMessage("El email debe tener un formato válido")
         .isLength({ max: 100 })
@@ -95,8 +95,7 @@ const validarActualizarUsuario = [
         }),
 
     body("password")
-        .notEmpty()
-        .withMessage("La contraseña es obligatoria")
+        .optional()
         .isLength({ min: 6, max: 100 })
         .withMessage("La contraseña debe tener entre 6 y 100 caracteres")
 ];
